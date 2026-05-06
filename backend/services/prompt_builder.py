@@ -10,7 +10,7 @@ def build_prompt(parse_result: FloorplanParseResult, brand_name: str) -> str:
     brand = BRAND_PRESETS[brand_name]
 
     def _room_line(r) -> str:
-        base = f"  - {r.type.replace('_', ' ').title()}: \"{r.label}\""
+        base = f"  - {r.type.replace('_', ' ').title()}"
         extras = []
         if r.fixtures:
             extras.append("fixtures: " + "; ".join(r.fixtures))
@@ -31,13 +31,14 @@ def build_prompt(parse_result: FloorplanParseResult, brand_name: str) -> str:
         else "  - Outdoor: NO"
     )
 
-    return f"""Transform this 2D architectural floor plan into a photorealistic 3D axonometric dollhouse render.
+    return f"""ABSOLUTE RULE — NO TEXT IN THE OUTPUT IMAGE: The rendered image must contain zero letters, digits, symbols, labels, dimensions, captions, or annotations of any kind. Not a single character. Any text visible in the output image means the render has failed.
+
+Transform this 2D architectural floor plan into a photorealistic 3D axonometric dollhouse render.
 
 FLOOR PLAN ROOMS — reproduce exactly, do not add or remove any spaces:
 {room_lines}
 {outdoor_line}
 Total spaces: {len(parse_result.rooms)}
-Consistency key: {parse_result.consistency_key}
 
 KNOWN AMBIGUITIES — do not invent details to fill these gaps:
 {risk_lines}
@@ -62,7 +63,7 @@ ROOM-TYPE RENDERING RULES — fixed specifications; apply identically every time
 - All rooms: include only fixtures and furniture listed in [fixtures] tags or standard for that room type; do not add pendant lights, bonus appliances, or decorative elements not present in the input
 
 HARD CONSTRAINTS:
-- NO TEXT WHATSOEVER: zero letters, numbers, room names, labels, dimensions, symbols, captions, or annotations anywhere in the image — not even a single character; if any text would appear, the render is a failure
+- NO TEXT IN IMAGE — already stated above; repeated here because it is the single most critical rule
 - Preserve the spatial layout and room proportions from the input floor plan
 - Use only the rooms listed in FLOOR PLAN ROOMS as the source of truth
 - Do not add windows, balconies, stairs, closets, fixtures, furniture, or decor unless supported by the input or the room type
