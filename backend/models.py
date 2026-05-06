@@ -5,10 +5,18 @@ from typing import Optional, Literal
 class Room(BaseModel):
     type: Literal[
         "bedroom", "bathroom", "kitchen", "living_room", "dining_room",
-        "study", "balcony", "laundry", "garage", "hallway", "other"
+        "study", "balcony", "laundry", "garage", "hallway", "closet", "storage", "other"
     ]
     label: str
     approx_area_sqm: Optional[float] = None
+    fixtures: list[str] = Field(
+        default_factory=list,
+        description="Fixtures and appliances visible in this room, each with their wall/position. E.g. ['stove on south wall', 'sink on east counter', 'island in centre'].",
+    )
+    floor_material: Optional[str] = Field(
+        default=None,
+        description="Floor material explicitly labelled in the plan for this room, e.g. 'timber', 'ceramic tile', 'concrete'. Null if not specified.",
+    )
 
 
 class FloorplanParsePayload(BaseModel):

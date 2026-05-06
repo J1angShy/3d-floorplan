@@ -17,9 +17,11 @@ Return a JSON object describing the layout:
   "is_floorplan": true or false — false if this is NOT an architectural floor plan,
   "rooms": [
     {
-      "type": one of: bedroom | bathroom | kitchen | living_room | dining_room | study | balcony | laundry | garage | hallway | other,
+      "type": one of: bedroom | bathroom | kitchen | living_room | dining_room | study | balcony | laundry | garage | hallway | closet | storage | other,
       "label": exact label text visible in the plan, or your inferred name,
-      "approx_area_sqm": estimated area as a number, or null if unclear
+      "approx_area_sqm": estimated area as a number, or null if unclear,
+      "fixtures": list of fixtures/appliances visible in this room WITH their wall or position — e.g. ["stove on south wall", "sink on east counter", "island in centre", "toilet against north wall", "bathtub on west wall"] — empty list if none are discernible,
+      "floor_material": floor material explicitly labelled or hatched in this room — e.g. "timber", "ceramic tile", "polished concrete", "carpet" — null if not indicated in the plan
     }
   ],
   "has_outdoor_space": true or false,
@@ -33,6 +35,7 @@ Rules:
 - If a room has no visible label, infer its type from furniture, fixtures, or position
 - Each distinct room/space in the plan must appear exactly once
 - Estimate approx_area_sqm from visual proportion relative to a typical apartment (null is fine)
+- For fixtures: record only what is explicitly drawn in the plan symbol or icon; describe wall/side placement using compass direction (north/south/east/west) or relative position (left/right/centre/back/front) based on standard plan orientation; omit fixtures that are ambiguous or not drawn
 - Do not infer luxury finishes, furniture brands, views, or decorations from the image
 """
 

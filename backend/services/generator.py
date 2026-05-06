@@ -59,6 +59,7 @@ def generate_3d_render(image_bytes: bytes, prompt: str) -> tuple[str, str, bool,
                 contents=[prompt, image],
                 config=types.GenerateContentConfig(
                     response_modalities=["TEXT", "IMAGE"],
+                    seed=42,
                 ),
             )
 
