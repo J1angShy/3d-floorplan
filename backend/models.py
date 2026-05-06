@@ -98,3 +98,24 @@ class PromptBuildRequest(BaseModel):
 
 class PromptBuildResponse(BaseModel):
     prompt: str
+
+
+class BrandPresetModel(BaseModel):
+    name: str
+    walls: str
+    floor: str
+    furniture_style: str
+    accent_primary: str
+    accent_secondary: str
+    fixtures: str
+    lighting: str
+    greenery: str
+
+
+class BrandCreateRequest(BaseModel):
+    id: str
+    preset: BrandPresetModel
+
+
+class BrandUpdateRequest(BaseModel):
+    preset: BrandPresetModel

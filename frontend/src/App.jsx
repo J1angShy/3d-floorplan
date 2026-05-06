@@ -3,9 +3,8 @@ import UploadZone from './components/UploadZone'
 import ParseResult from './components/ParseResult'
 import RenderResult from './components/RenderResult'
 import ImageModal from './components/ImageModal'
-import { buildPromptFromParse, getGenerateJob, getParseJob, startGenerateJob, startParseJob } from './api/client'
-
-const BRAND_PRESET = 'modern'
+import BrandPresetsPage from './components/BrandPresetsPage'
+import { buildPromptFromParse, getBrands, getGenerateJob, getParseJob, startGenerateJob, startParseJob } from './api/client'
 
 const s = {
   app: { minHeight: '100vh', display: 'flex', flexDirection: 'column' },
@@ -14,10 +13,21 @@ const s = {
     padding: '1rem 1.5rem',
     display: 'flex',
     alignItems: 'center',
+    justifyContent: 'space-between',
     gap: '1rem',
   },
   title: { fontSize: 16, fontWeight: 600, letterSpacing: '-0.3px' },
   subtitle: { fontSize: 14, color: 'var(--text-muted)' },
+  headerRight: { display: 'flex', alignItems: 'center', gap: 8 },
+  brandLabel: { fontSize: 13, color: 'var(--text-muted)' },
+  brandSelect: {
+    padding: '7px 10px', borderRadius: 6, border: '1px solid var(--border)',
+    background: 'var(--surface-2)', color: 'var(--text)', fontSize: 13, cursor: 'pointer',
+  },
+  manageBrandsBtn: {
+    padding: '7px 14px', borderRadius: 6, border: '1px solid var(--border)',
+    background: 'var(--surface-2)', color: 'var(--text)', cursor: 'pointer', fontSize: 13,
+  },
   main: {
     flex: 1, display: 'grid',
     gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
@@ -115,6 +125,10 @@ function buildProgressMessage(progress, type) {
 }
 
 export default function App() {
+  const [page, setPage] = useState('main')
+  const [activeBrand, setActiveBrand] = useState('modern')
+  const [allBrands, setAllBrands] = useState({ modern: { name: 'Default' } })
+
   const [file, setFile] = useState(null)
   const [preview, setPreview] = useState(null)
   const [parseResult, setParseResult] = useState(null)
@@ -126,6 +140,10 @@ export default function App() {
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState(null)
   const [modal, setModal] = useState({ open: false, mode: 'single', src: null, leftSrc: null, rightSrc: null })
+
+  useEffect(() => {
+    getBrands().then(data => setAllBrands(data.presets || {})).catch(() => {})
+  }, [])
 
   const openPreview = (src) => setModal({ open: true, mode: 'single', src, leftSrc: null, rightSrc: null })
   const openCompare = () => {
@@ -180,7 +198,7 @@ export default function App() {
           setParseResult(result)
           setPromptLoading(true)
           try {
-            const { prompt } = await buildPromptFromParse(result, BRAND_PRESET)
+            const { prompt } = await buildPromptFromParse(result, activeBrand)
             setPromptDraft(prompt)
             setStatus('parsed')
           } catch (e) {
@@ -214,7 +232,7 @@ export default function App() {
       elapsed_seconds: 0,
     })
     try {
-      const job = await startGenerateJob(file, parseResult, BRAND_PRESET, promptDraft)
+      const job = await startGenerateJob(file, parseResult, activeBrand, promptDraft)
       setGenerationProgress({
         progress: 8,
         stage: job.status,
@@ -248,7 +266,7 @@ export default function App() {
     setError(null)
     setPromptLoading(true)
     try {
-      const { prompt } = await buildPromptFromParse(parseResult, BRAND_PRESET)
+      const { prompt } = await buildPromptFromParse(parseResult, activeBrand)
       setPromptDraft(prompt)
     } catch (e) {
       setError(e.message)
@@ -259,6 +277,19 @@ export default function App() {
 
   const isLoading = status === 'parsing' || status === 'generating'
   const canGenerate = parseResult && promptDraft.trim() && !promptLoading && status !== 'generating'
+
+  if (page === 'brands') {
+    return (
+      <BrandPresetsPage
+        activeBrand={activeBrand}
+        onActiveBrandChange={(id) => { setActiveBrand(id); setAllBrands(prev => ({ ...prev })) }}
+        onBack={() => {
+          getBrands().then(data => setAllBrands(data.presets || {})).catch(() => {})
+          setPage('main')
+        }}
+      />
+    )
+  }
 
   return (
     <div style={s.app}>
@@ -276,6 +307,21 @@ export default function App() {
         <div>
           <div style={s.title}>2D → 3D Floorplan</div>
           <div style={s.subtitle}>Parse first, then generate with locked brand guardrails.</div>
+        </div>
+        <div style={s.headerRight}>
+          <span style={s.brandLabel}>Brand</span>
+          <select
+            style={s.brandSelect}
+            value={activeBrand}
+            onChange={(e) => setActiveBrand(e.target.value)}
+          >
+            {Object.entries(allBrands).map(([id, preset]) => (
+              <option key={id} value={id}>{preset.name || id}</option>
+            ))}
+          </select>
+          <button style={s.manageBrandsBtn} onClick={() => setPage('brands')}>
+            Manage brands
+          </button>
         </div>
       </header>
 

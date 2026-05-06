@@ -55,3 +55,37 @@ export async function startGenerateJob(imageFile, parseResult, brandPreset = 'mo
 export async function getGenerateJob(jobId) {
   return handleResponse(await fetch(`${BASE_URL}/api/generate/jobs/${jobId}`))
 }
+
+export async function getBrands() {
+  return handleResponse(await fetch(`${BASE_URL}/api/brands`))
+}
+
+export async function parseBrandPdf(file) {
+  const form = new FormData()
+  form.append('pdf', file)
+  return handleResponse(await fetch(`${BASE_URL}/api/brands/parse-pdf`, { method: 'POST', body: form }))
+}
+
+export async function createBrand(id, preset) {
+  return handleResponse(await fetch(`${BASE_URL}/api/brands`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, preset }),
+  }))
+}
+
+export async function updateBrand(id, preset) {
+  return handleResponse(await fetch(`${BASE_URL}/api/brands/${encodeURIComponent(id)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ preset }),
+  }))
+}
+
+export async function deleteBrand(id) {
+  const res = await fetch(`${BASE_URL}/api/brands/${encodeURIComponent(id)}`, { method: 'DELETE' })
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Delete failed' }))
+    throw new Error(err.detail || 'Delete failed')
+  }
+}

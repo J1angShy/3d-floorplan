@@ -9,6 +9,8 @@ from google.genai.errors import APIError
 from pydantic import ValidationError
 
 from models import (
+    BrandCreateRequest,
+    BrandUpdateRequest,
     FloorplanParseResult,
     GenerateJobStartResponse,
     GenerateJobStatusResponse,
@@ -22,7 +24,7 @@ from services.guardrails import validate_upload
 from services.parser import parse_floorplan
 from services.prompt_builder import build_prompt
 from services.generator import generate_3d_render
-from config.brand_config import BRAND_PRESETS, DEFAULT_BRAND
+from config.brand_config import BRAND_PRESETS, DEFAULT_BRAND, save_brands
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 load_dotenv(ROOT_DIR / ".env")
@@ -53,6 +55,51 @@ def health():
 @app.get("/api/brands")
 def brands():
     return {"default": DEFAULT_BRAND, "presets": BRAND_PRESETS}
+
+
+@app.post("/api/brands/parse-pdf")
+async def parse_brand_pdf_endpoint(pdf: UploadFile = File(...)):
+    pdf_bytes = await pdf.read()
+    if len(pdf_bytes) > 20 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="PDF exceeds 20 MB limit.")
+    try:
+        from services.brand_parser import parse_brand_pdf
+        return parse_brand_pdf(pdf_bytes)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except APIError as exc:
+        raise HTTPException(status_code=502, detail=f"Gemini PDF parsing failed: {exc}") from exc
+
+
+@app.post("/api/brands", status_code=201)
+def create_brand(body: BrandCreateRequest):
+    brand_id = body.id.strip().lower().replace(" ", "_")
+    if not brand_id:
+        raise HTTPException(status_code=400, detail="Brand id must not be empty.")
+    if brand_id in BRAND_PRESETS:
+        raise HTTPException(status_code=409, detail=f"Brand '{brand_id}' already exists.")
+    BRAND_PRESETS[brand_id] = body.preset.model_dump()
+    save_brands()
+    return {"id": brand_id, "preset": BRAND_PRESETS[brand_id]}
+
+
+@app.put("/api/brands/{brand_id}")
+def update_brand(brand_id: str, body: BrandUpdateRequest):
+    if brand_id not in BRAND_PRESETS:
+        raise HTTPException(status_code=404, detail=f"Brand '{brand_id}' not found.")
+    BRAND_PRESETS[brand_id] = body.preset.model_dump()
+    save_brands()
+    return {"id": brand_id, "preset": BRAND_PRESETS[brand_id]}
+
+
+@app.delete("/api/brands/{brand_id}", status_code=204)
+def delete_brand(brand_id: str):
+    if brand_id not in BRAND_PRESETS:
+        raise HTTPException(status_code=404, detail=f"Brand '{brand_id}' not found.")
+    if len(BRAND_PRESETS) <= 1:
+        raise HTTPException(status_code=400, detail="Cannot delete the last brand preset.")
+    del BRAND_PRESETS[brand_id]
+    save_brands()
 
 
 def _set_job(

@@ -1,0 +1,35 @@
+{
+  "modern": {
+    "name": "Default",
+    "walls": "pure white matte plaster (#FFFFFF)",
+    "floor": "light oak hardwood with subtle grain texture",
+    "furniture_style": "contemporary Scandinavian — clean lines, linen and neutral upholstery",
+    "accent_primary": "deep burgundy/mauve (#7B3F6E) on bedding, chair cushions, table accessories",
+    "accent_secondary": "soft lavender (#E8D5F0) on throw pillows and framed artwork",
+    "fixtures": "matte black (#1A1A1A) door frames, window frames, pendant lights",
+    "lighting": "bright natural daylight from top-left, soft directional shadows",
+    "greenery": "tropical plants (monstera, fiddle-leaf fig, snake plant) at balconies and room corners"
+  },
+  "ascent": {
+    "name": "Ascent",
+    "walls": "Light off-white or very pale lavender (#e4d4ee)",
+    "floor": "Light-toned wood flooring or light carpet",
+    "furniture_style": "Modern minimalist design with light neutral fabric upholstery",
+    "accent_primary": "Dark plum (#410e2b)",
+    "accent_secondary": "Muted lavender (#ad95b7)",
+    "fixtures": "Brushed metal",
+    "lighting": "Abundant natural light with warm, recessed indoor lighting",
+    "greenery": "Lush outdoor landscaping and subtle indoor plants"
+  },
+  "ascent_residences": {
+    "name": "Ascent Residences",
+    "walls": "Light neutral plaster (#f0ece0)",
+    "floor": "Light to medium tone hardwood",
+    "furniture_style": "Modern minimalist with light fabrics",
+    "accent_primary": "Deep plum (#410e2b)",
+    "accent_secondary": "Soft lavender (#ad95b7)",
+    "fixtures": "Brushed nickel",
+    "lighting": "Natural daylight with warm recessed interior lighting",
+    "greenery": "Lush, natural landscaping and balcony plants"
+  }
+}

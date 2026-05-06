@@ -1,4 +1,8 @@
+import json
+from pathlib import Path
 from typing import TypedDict
+
+BRANDS_FILE = Path(__file__).resolve().parent / "brands.json"
 
 
 class BrandPreset(TypedDict):
@@ -13,7 +17,7 @@ class BrandPreset(TypedDict):
     greenery: str
 
 
-BRAND_PRESETS: dict[str, BrandPreset] = {
+_DEFAULTS: dict[str, BrandPreset] = {
     "modern": {
         "name": "Default",
         "walls": "pure white matte plaster (#FFFFFF)",
@@ -28,3 +32,25 @@ BRAND_PRESETS: dict[str, BrandPreset] = {
 }
 
 DEFAULT_BRAND = "modern"
+
+
+def _load() -> dict[str, BrandPreset]:
+    if BRANDS_FILE.exists():
+        try:
+            return json.loads(BRANDS_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    _write(_DEFAULTS)
+    return dict(_DEFAULTS)
+
+
+def _write(brands: dict[str, BrandPreset]) -> None:
+    BRANDS_FILE.write_text(json.dumps(brands, indent=2, ensure_ascii=False), encoding="utf-8")
+
+
+BRAND_PRESETS: dict[str, BrandPreset] = _load()
+
+
+def save_brands() -> None:
+    """Persist the current in-memory BRAND_PRESETS to disk."""
+    _write(BRAND_PRESETS)
