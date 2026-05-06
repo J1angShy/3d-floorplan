@@ -20,9 +20,14 @@ const s = {
     background: '#000',
   },
   label: { color: 'var(--text-muted)', fontSize: 15, lineHeight: 1.55 },
+  previewBtn: {
+    marginTop: 10,
+    padding: '7px 14px', borderRadius: 6, border: '1px solid var(--border)',
+    background: 'var(--surface-2)', color: 'var(--text)', cursor: 'pointer', fontSize: 13,
+  },
 }
 
-export default function UploadZone({ onFileSelect, preview }) {
+export default function UploadZone({ onFileSelect, preview, onPreview }) {
   const inputRef = useRef()
   const [dragging, setDragging] = useState(false)
 
@@ -51,6 +56,14 @@ export default function UploadZone({ onFileSelect, preview }) {
           : <p style={s.label}>Drop 2D floor plan here<br />or click to browse</p>
         }
       </div>
+      {preview && (
+        <button
+          style={s.previewBtn}
+          onClick={(e) => { e.stopPropagation(); onPreview(preview) }}
+        >
+          Preview
+        </button>
+      )}
     </div>
   )
 }

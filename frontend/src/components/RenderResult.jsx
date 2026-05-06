@@ -29,7 +29,7 @@ const s = {
   },
 }
 
-export default function RenderResult({ result }) {
+export default function RenderResult({ result, inputSrc, onPreview, onCompare }) {
   const [showPrompt, setShowPrompt] = useState(false)
   const dataUrl = `data:${result.mime_type};base64,${result.image_base64}`
 
@@ -57,6 +57,10 @@ export default function RenderResult({ result }) {
       <p style={s.meta}>{result.room_count} rooms</p>
       <div style={s.row}>
         <button style={s.btn} onClick={download}>Download PNG</button>
+        <button style={s.btn} onClick={() => onPreview(dataUrl)}>Preview</button>
+        {inputSrc && (
+          <button style={s.btn} onClick={onCompare}>Compare</button>
+        )}
         <button style={s.btn} onClick={() => setShowPrompt(v => !v)}>
           {showPrompt ? 'Hide prompt' : 'View prompt'}
         </button>

@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import UploadZone from './components/UploadZone'
 import ParseResult from './components/ParseResult'
 import RenderResult from './components/RenderResult'
+import ImageModal from './components/ImageModal'
 import { buildPromptFromParse, getGenerateJob, getParseJob, startGenerateJob, startParseJob } from './api/client'
 
 const BRAND_PRESET = 'modern'
@@ -124,6 +125,15 @@ export default function App() {
   const [promptLoading, setPromptLoading] = useState(false)
   const [status, setStatus] = useState('idle')
   const [error, setError] = useState(null)
+  const [modal, setModal] = useState({ open: false, mode: 'single', src: null, leftSrc: null, rightSrc: null })
+
+  const openPreview = (src) => setModal({ open: true, mode: 'single', src, leftSrc: null, rightSrc: null })
+  const openCompare = () => {
+    if (!preview || !renderResult) return
+    const rightSrc = `data:${renderResult.mime_type};base64,${renderResult.image_base64}`
+    setModal({ open: true, mode: 'compare', src: null, leftSrc: preview, rightSrc })
+  }
+  const closeModal = () => setModal(m => ({ ...m, open: false }))
 
   const handleFileSelect = (f) => {
     setFile(f)
@@ -253,6 +263,14 @@ export default function App() {
   return (
     <div style={s.app}>
       <style>{`@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }`}</style>
+      <ImageModal
+        isOpen={modal.open}
+        onClose={closeModal}
+        mode={modal.mode}
+        src={modal.src}
+        leftSrc={modal.leftSrc}
+        rightSrc={modal.rightSrc}
+      />
 
       <header style={s.header}>
         <div>
@@ -266,7 +284,7 @@ export default function App() {
         {/* Step 1: Upload */}
         <div style={s.panel}>
           <span style={s.step}>01 — Input</span>
-          <UploadZone onFileSelect={handleFileSelect} preview={preview} />
+          <UploadZone onFileSelect={handleFileSelect} preview={preview} onPreview={openPreview} />
           <p style={s.helper}>
             MVP focus: extract a structured room list, build a deterministic brand prompt,
             review and edit it in step 03, then generate.
@@ -303,7 +321,7 @@ export default function App() {
         <div style={s.panel}>
           <span style={s.step}>03 — Prompt & output</span>
           {renderResult ? (
-            <RenderResult result={renderResult} />
+            <RenderResult result={renderResult} inputSrc={preview} onPreview={openPreview} onCompare={openCompare} />
           ) : parseResult ? (
             <>
               <p style={s.helper}>
@@ -367,14 +385,24 @@ export default function App() {
 }
 
 function GenerationProgress({ progress }) {
+  const startRef = useRef({ elapsed: Math.floor(progress.elapsed_seconds || 0), wallTime: Date.now() })
+  const [displayElapsed, setDisplayElapsed] = useState(Math.floor(progress.elapsed_seconds || 0))
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const { elapsed, wallTime } = startRef.current
+      setDisplayElapsed(elapsed + Math.floor((Date.now() - wallTime) / 1000))
+    }, 1000)
+    return () => clearInterval(id)
+  }, [])
+
   const pct = Math.max(0, Math.min(100, progress.progress || 0))
-  const elapsed = Math.floor(progress.elapsed_seconds || 0)
 
   return (
     <div style={s.progressWrap}>
       <div style={s.progressMeta}>
         <span>{progress.stage?.replaceAll('_', ' ') || 'working'}</span>
-        <span>{pct}% · {elapsed}s</span>
+        <span>{pct}% · {displayElapsed}s</span>
       </div>
       <div style={s.progressTrack}>
         <div style={{ ...s.progressFill, width: `${pct}%` }} />
